@@ -35,7 +35,7 @@ def transform_labels(df, label_settings, classification_type=None, silent=False)
     labels = list(label_grouping_config.keys())
 
     if classification_type == "binary":
-        positive_label = label_settings["positive_label"]
+        positive_label = label_settings["label_groupings"]["positive_label"][0]
         negative_label = "Not " + positive_label
         df[label_col] = np.where(df[label_col] == positive_label, positive_label, negative_label)
         labels = [negative_label, positive_label]

@@ -44,3 +44,6 @@ output/
 
 # Archived files
 **/archive/**
+
+#macOS files
+.DS_store
