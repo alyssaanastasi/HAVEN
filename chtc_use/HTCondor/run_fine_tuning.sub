@@ -4,7 +4,7 @@
 executable = /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/run_fine_tuning.sh
 
 # Docker image
-container_image = docker://alyssaaanastasi/haven:v1
+container_image = docker://alyssaaanastasi/haven:v2
 
 universe = container
 initial_dir = /home/aranastasi/spillover
