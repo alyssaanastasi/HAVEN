@@ -20,12 +20,16 @@ echo "1. Login to wandb"
 echo "--------------------------------------------"
 echo ""
 
+# Reinstall wandb to get past distutils issue? 
+run_cmd "pip install wandb"
+
 run_cmd "export WANDB_API_KEY=9892595596b389b2400e1a3ae3bef9ee86cbf936"
+
 run_cmd "wandb login"
 
 
 echo ""
-echo "1. Check Pip List"
+echo "2. Confirm Pip List"
 echo "--------------------------------------------"
 echo ""
 
