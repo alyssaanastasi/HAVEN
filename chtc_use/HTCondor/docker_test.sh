@@ -12,7 +12,7 @@ data_dir="HAVEN/output/raw/kuzmin/binary/haven"
 
 ######
 # If running on docker
-source /venv/docker_haven_venv/bin/activate
+source /venv/docker_haven/bin/activate
 ####
 
 echo ""
