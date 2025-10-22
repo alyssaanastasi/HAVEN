@@ -20,17 +20,12 @@ output = /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/logs/finetune_model_
 
 # Resources needed
 request_cpus = 4
-For non-bagged models like the CNN or LSTM, 32GB mem and 64GB disk is plenty
 request_memory = 32GB
 request_disk = 64GB
-
-# When training bagged models, more memory and disk are needed
-# request_memory = 128GB
-# request_disk = 128GB
 
 # Input files
 transfer_input_files = /home/aranastasi/spillover/HAVEN
 requirements = (HasCHTCStaging == true)
 
-# Run as many instances of the job as defined in params file
-queue 1
+# Run once
+queue

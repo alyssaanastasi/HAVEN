@@ -28,11 +28,18 @@ echo "cv_seed: $cv_seed"
 source /venv/docker_mgm_venv/bin/activate
 ####
 
+echo ""
+echo "1. Login to wandb"
+echo "--------------------------------------------"
+echo ""
+
+run_cmd "export WANDB_API_KEY=9892595596b389b2400e1a3ae3bef9ee86cbf936"
+run_cmd "wandb login"
 
 # Run model fine tuning
-# top level mgm folder was transferred in .sub file
+# top level HAVEN folder was transferred in .sub file
 echo ""
-echo "1. Fine tune base HAVEN model"
+echo "2. Fine tune base HAVEN model"
 echo "--------------------------------------------"
 echo ""
 
