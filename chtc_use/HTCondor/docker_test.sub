@@ -1,0 +1,28 @@
+# Submit via `condor_submit /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/docker_test.sub`
+# Monitor progress via `condor_q`
+
+executable = /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/docker_test.sh
+
+# Docker image
+container_image = docker://alyssaaanastasi/haven:v1
+
+universe = container
+initial_dir = /home/aranastasi/spillover
+preserve_relative_paths = True
+
+# Log paths
+log = /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/logs/docker_test_$(Cluster).log
+error = /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/logs/docker_test_$(Cluster).err
+output = /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/logs/docker_test_$(Cluster)_$(Process).out
+
+# Resources needed
+request_cpus = 1
+request_memory = 4GB
+request_disk = 2GB
+
+# Input files
+transfer_input_files = /home/aranastasi/spillover/HAVEN
+requirements = (HasCHTCStaging == true)
+
+# Run once
+queue
