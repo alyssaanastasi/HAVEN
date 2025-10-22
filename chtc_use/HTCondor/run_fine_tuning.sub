@@ -2,13 +2,10 @@
 # Monitor progress via `condor_q`
 
 executable = /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/run_fine_tuning.sh
-# arguments = $(Cluster) $(Process) $(dirname) $(species_to_withhold) $(model_type) $(cv_seed)
 
 # Docker image
 container_image = docker://alyssaaanastasi/haven:v0
 
-# Apptainer image created from docker://ryanmoreno/mgm:v0
-# container_image = file:///staging/aranastasi/mgm/mgm_apptainer.sif
 universe = container
 initial_dir = /home/aranastasi/spillover
 preserve_relative_paths = True

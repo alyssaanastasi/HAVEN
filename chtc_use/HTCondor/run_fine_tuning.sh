@@ -8,24 +8,11 @@ run_cmd() {
     echo ""
 }
 
-dir_name=$3
-species_to_withhold=$4
-model_type=$5
-cv_seed=$6
-
 data_dir="HAVEN/output/raw/kuzmin/binary/haven"
 
 ######
-# Print params
-######
-echo "dir_name: $dir_name"
-echo "species_to_withhold: $species_to_withhold"
-echo "model_type: $model_type"
-echo "cv_seed: $cv_seed"
-
-######
 # If running on docker
-source /venv/docker_mgm_venv/bin/activate
+# source /venv/docker_mgm_venv/bin/activate
 ####
 
 echo ""
@@ -58,7 +45,7 @@ run_cmd "ls $data_dir"
 # run_cmd "ls mgm/mgm/data"
 # run_cmd "ls $data_dir"
 
-# run_cmd "mv mgm/mgm/data/$dir_name.tar.gz /staging/aranastasi/mgm/CV_models/"
+run_cmd "mv $data_dir /staging/aranastasi/HAVEN/outputs/"
 
 # delete output from the job working directory
 # run_cmd "rm -r $data_dir"
