@@ -21,7 +21,6 @@ echo "--------------------------------------------"
 echo ""
 
 # Install setuptools to get past distutils issue? 
-run_cmd "pip install --upgrade setuptools"
 
 run_cmd "export WANDB_API_KEY=9892595596b389b2400e1a3ae3bef9ee86cbf936"
 
