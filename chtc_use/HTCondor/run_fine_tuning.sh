@@ -8,7 +8,7 @@ run_cmd() {
     echo ""
 }
 
-data_dir="HAVEN/output/raw/kuzmin/binary/haven"
+data_dir="output/raw/kuzmin/binary/haven"
 
 ######
 # If running on docker
