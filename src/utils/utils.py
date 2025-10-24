@@ -31,14 +31,18 @@ def transform_labels(df, label_settings, classification_type=None, silent=False)
             print(f"Grouping labels using config : {label_grouping_config}")
         df = group_labels(df, label_col, label_grouping_config)
 
-    # labels = df[label_col].unique()
-    labels = list(label_grouping_config.keys())
-
+    labels = df[label_col].unique()
+    print(labels)
+    # labels = list(label_grouping_config.keys())
+    """
     if classification_type == "binary":
         positive_label = label_settings["label_groupings"]["positive_label"][0]
         negative_label = "Not " + positive_label
-        df[label_col] = np.where(df[label_col] == positive_label, positive_label, negative_label)
+        print(df[label_col])
+        # df[label_col] = np.where(df[label_col] == positive_label, positive_label, negative_label)
+        # print(df[label_col])
         labels = [negative_label, positive_label]
+    """
 
     label_idx_map, idx_label_map = get_label_vocabulary(labels)
     if not silent:
@@ -90,6 +94,7 @@ def compute_class_distribution(df, label_col, format=False):
 
 def get_class_weights(datasetloader):
     labels = datasetloader.dataset.get_labels()
+    print(f"Labels: {np.unique(labels)}")
     class_weights = compute_class_weight(class_weight="balanced",
                                 classes=np.unique(labels),
                                 y=labels)
