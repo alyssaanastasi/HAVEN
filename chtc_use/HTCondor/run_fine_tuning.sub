@@ -4,7 +4,7 @@
 executable = /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/run_fine_tuning.sh
 
 # Docker image
-container_image = docker://alyssaaanastasi/haven:v2
+container_image = docker://alyssaaanastasi/haven:v3
 
 universe = container
 initial_dir = /home/aranastasi/spillover
@@ -15,8 +15,12 @@ log = /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/logs/finetune_model_$(C
 error = /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/logs/finetune_model_$(Cluster)_$(Process)_haven.err
 output = /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/logs/finetune_model_$(Cluster)_$(Process)_haven.out
 
-# Resources needed
-request_cpus = 20
+# Resources needed - use GPUs
++WantGPULab = true
++GPUJobLength = "long"
+
+request_gpus = 1
+request_cpus = 4
 request_memory = 16GB
 request_disk = 64GB
 
