@@ -17,7 +17,7 @@ output = /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/logs/finetune_model_
 
 # Resources needed
 request_cpus = 20
-request_memory = 32GB
+request_memory = 16GB
 request_disk = 64GB
 
 # Input files
