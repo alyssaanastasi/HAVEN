@@ -1,0 +1,31 @@
+# Submit via `condor_submit /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/prediction_test.sub`
+# Monitor progress via `condor_q`
+
+executable = /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/prediction_test.sh
+
+# Docker image
+container_image = docker://alyssaaanastasi/haven:v4
+
+universe = container
+initial_dir = /home/aranastasi/spillover
+preserve_relative_paths = True
+
+# Log paths
+log = /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/logs/prediction_test_$(Cluster)_$(Process)_haven.log
+error = /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/logs/prediction_test_$(Cluster)_$(Process)_haven.err
+output = /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/logs/prediction_test_$(Cluster)_$(Process)_haven.out
+
+# Resources needed - use GPUs
++WantGPULab = true
+
+request_gpus = 1
+request_cpus = 4
+request_memory = 32GB
+request_disk = 64GB
+
+# Input files
+transfer_input_files = /home/aranastasi/spillover/HAVEN
+requirements = (HasCHTCStaging == true)
+
+# Run once
+queue
