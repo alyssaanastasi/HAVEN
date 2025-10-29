@@ -131,8 +131,11 @@ def execute(config):
             # in pre_train_encoder_settings it has been incremented by 1 to account for CLS token
             task["segment_len"] = sequence_settings["max_sequence_length"]
 
+            print(f"Task Name: {task_name}")
+
             if task_name in mapper.model_map:
                 print(f"Executing {task_name} in {mode} mode.")
+                print(task)
                 fine_tune_model = mapper.model_map[task_name].get_model(model_params=task)
             else:
                 print(f"ERROR: Unknown model {task_name}.")
@@ -148,7 +151,7 @@ def execute(config):
 
             wandb.init(project="haven",
                        config=wandb_config,
-                       group=fine_tune_settings["experiment"],
+                       group="kuzmin_LOOCV",
                        job_type=task_id,
                        name=f"iter_{iter}_species_{species}")
 
