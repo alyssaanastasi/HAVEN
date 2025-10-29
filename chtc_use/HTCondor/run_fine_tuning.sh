@@ -45,7 +45,7 @@ run_cmd "ls $data_dir"
 # run_cmd "ls mgm/mgm/data"
 # run_cmd "ls $data_dir"
 
-run_cmd "mv $data_dir /staging/aranastasi/HAVEN/outputs/"
+run_cmd "mv $data_dir /staging/aranastasi/HAVEN/outputs/LOOCV"
 
 # delete output from the job working directory
 # run_cmd "rm -r $data_dir"
