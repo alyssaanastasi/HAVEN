@@ -150,7 +150,7 @@ def execute(config):
                        config=wandb_config,
                        group=fine_tune_settings["experiment"],
                        job_type=task_id,
-                       name=f"iter_{iter}")
+                       name=f"iter_{iter}_species_{species}")
 
             if mode == "train":
                 # retraining the model_params for the fine_tuning task
