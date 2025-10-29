@@ -14,7 +14,7 @@ def execute(config):
     input_settings = config["input_settings"]
     input_dir = input_settings["input_dir"]
     input_file_names = input_settings["file_names"]
-    input_split_seeds = input_settings["split_seeds"]
+    input_split_seed = input_settings["split_seed"]
     withheld_species = input_settings['withheld_species']
     withheld_species_long = ""
 
