@@ -30,14 +30,7 @@ request_disk = 64GB
 # Transfers entire repo, bad practice in CHTC
 # transfer_input_files = /home/aranastasi/spillover/HAVEN
 # Transfer files that are specifically used 
-transfer_input_files = /home/aranastasi/spillover/HAVEN/input/config-files/virus_host_prediction/kuzmin/TEST_kuzmin-fine-tuning.yaml,
-/home/aranastasi/spillover/HAVEN/input/data/kuzmin/kuzmin_no_gaps.csv,
-/home/aranastasi/spillover/HAVEN/output/haven_pretrained_viral_seq.pth,
-/home/aranastasi/spillover/HAVEN/src/pipelines/virus_host_prediction_training/TEST_kuzmin_fine_tuning_pipeline.py, 
-/home/aranastasi/spillover/HAVEN/src/training_accessories/early_stopping.py,
-/home/aranastasi/spillover/HAVEN/src/utils,
-/home/aranastasi/spillover/HAVEN/src/run.py,
-/home/aranastasi/spillover/HAVEN/src/models/baseline/nlp
+transfer_input_files = /home/aranastasi/spillover/HAVEN/input/config-files/virus_host_prediction/kuzmin/TEST_kuzmin-fine-tuning.yaml, /home/aranastasi/spillover/HAVEN/input/data/kuzmin/kuzmin_no_gaps.csv, /home/aranastasi/spillover/HAVEN/output/haven_pretrained_viral_seq.pth, /home/aranastasi/spillover/HAVEN/src/pipelines/virus_host_prediction_training/TEST_kuzmin_fine_tuning_pipeline.py,  /home/aranastasi/spillover/HAVEN/src/training_accessories/early_stopping.py, /home/aranastasi/spillover/HAVEN/src/utils, /home/aranastasi/spillover/HAVEN/src/run.py, /home/aranastasi/spillover/HAVEN/src/models/baseline/nlp
 
 
 requirements = (HasCHTCStaging == true)
