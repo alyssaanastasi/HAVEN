@@ -36,7 +36,7 @@ echo ""
 
 run_cmd "ls"
 
-run_cmd "python run.py -c TEST_kuzmin-fine-tuning.yaml -r $rep"
+run_cmd "python HAVEN/src/run.py -c HAVEN/input/config-files/virus_host_prediction/kuzmin/TEST_kuzmin-fine-tuning.yaml -r $rep"
 
 # Copy output files to staging
 echo ""
