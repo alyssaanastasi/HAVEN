@@ -10,6 +10,7 @@ run_cmd() {
 
 
 rep=$2
+echo "current rep: $2"
 
 data_dir="HAVEN/output/kuzmin/LOOCV/rep$rep"
 
