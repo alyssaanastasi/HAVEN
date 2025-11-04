@@ -2,6 +2,7 @@
 # Monitor progress via `condor_q`
 
 executable = /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/run_LOOCV_fine_tuning.sh
+arguments = $(Cluster) $(Process)
 
 # Docker image
 container_image = docker://alyssaaanastasi/haven:v5
