@@ -7,6 +7,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Zoonosis prediction pipeline")
     parser.add_argument('-c', '--config', required=True,
                         help="File containing configuration to execute the pipeline.\n")
+    parser.add_argument('--r', '--rep', required=False,
+                        help="Model replicate number")
     args = parser.parse_args()
     return args
 

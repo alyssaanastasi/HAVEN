@@ -22,7 +22,7 @@ output = /home/aranastasi/spillover/HAVEN/chtc_use/HTCondor/logs/finetune_model_
 request_gpus = 1
 gpus_minimum_capability = 7.0
 gpus_minimum_memory = 20000
-request_cpus = 4
+request_cpus = 1
 request_memory = 32GB
 request_disk = 64GB
 
