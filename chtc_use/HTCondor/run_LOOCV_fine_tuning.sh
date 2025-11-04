@@ -34,7 +34,7 @@ echo "2. Fine tune base HAVEN model"
 echo "--------------------------------------------"
 echo ""
 
-run_cmd "python HAVEN/src/run.py -c HAVEN/input/config-files/virus_host_prediction/kuzmin/kuzmin-fine-tuning.yaml -r $rep"
+run_cmd "python HAVEN/src/run.py -c HAVEN/input/config-files/virus_host_prediction/kuzmin/TEST_kuzmin-fine-tuning.yaml -r $rep"
 
 # Copy output files to staging
 echo ""
