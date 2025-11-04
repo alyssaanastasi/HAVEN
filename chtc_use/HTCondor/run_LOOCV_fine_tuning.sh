@@ -11,7 +11,7 @@ run_cmd() {
 
 rep=$2
 
-data_dir="HAVEN/output/raw/kuzmin/binary/haven/rep$rep"
+data_dir="output/kuzmin/LOOCV/rep$rep"
 
 
 ######
