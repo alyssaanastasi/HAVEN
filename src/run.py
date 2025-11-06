@@ -19,7 +19,10 @@ def main():
     print(config)
     config_type = config["config_type"]
     if config_type in mapper.pipeline_mapper:
-        mapper.pipeline_mapper[config_type].execute(config)
+        if args.rep is not None:
+            mapper.pipeline_mapper[config_type].execute(config, int(args.rep))
+        else:
+            mapper.pipeline_mapper[config_type].execute(config)
     else:
         print("ERROR: Unsupported configuration for config_type. See readme for supported 'config_type' values.")
         exit(1)

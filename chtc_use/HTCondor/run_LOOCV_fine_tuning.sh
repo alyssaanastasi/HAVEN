@@ -37,7 +37,7 @@ echo ""
 
 run_cmd "ls"
 
-run_cmd "python HAVEN/src/run.py -c HAVEN/input/config-files/virus_host_prediction/kuzmin/TEST_kuzmin-fine-tuning.yaml -r $rep"
+run_cmd "python HAVEN/src/run.py -c HAVEN/input/config-files/virus_host_prediction/kuzmin/kuzmin-fine-tuning.yaml -r $rep"
 
 # Copy output files to staging
 echo ""
@@ -52,7 +52,9 @@ run_cmd "tar -czf kuzmin_LOOCV_fine_tuning_rep$rep.tar.gz $data_dir"
 # run_cmd "ls mgm/mgm/data"
 run_cmd "ls $data_dir"
 
-run_cmd "mv kuzmin_LOOCV_fine_tuning_rep$rep.tar.gz /staging/aranastasi/HAVEN/outputs/LOOCV/finetuning_rep$rep"
+run_cmd "mkdir -p /staging/aranastasi/HAVEN/outputs/LOOCV_reps"
+
+run_cmd "mv kuzmin_LOOCV_fine_tuning_rep$rep.tar.gz /staging/aranastasi/HAVEN/outputs/LOOCV_reps"
 
 # delete output from the job working directory
 # run_cmd "rm -r $data_dir"

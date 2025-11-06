@@ -149,7 +149,7 @@ def execute(config, rep=0):
                 print(f"ERROR: Unknown model {task_name}.")
                 continue
 
-            if task_id not in results:
+            if task_id not in results:\
                 # first iteration
                 results[task_id] = []
 
@@ -180,6 +180,7 @@ def execute(config, rep=0):
             result_df.rename(columns=index_label_map, inplace=True)
             result_df["y_true"] = result_df["y_true"].map(index_label_map)
             result_df["itr"] = iter
+            result_df['virus_species'] = species
             results[task_id].append(result_df)
 
             if fine_tune_settings["save_model"]:
