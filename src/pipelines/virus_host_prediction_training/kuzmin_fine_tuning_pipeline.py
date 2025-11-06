@@ -149,7 +149,7 @@ def execute(config, rep=0):
                 print(f"ERROR: Unknown model {task_name}.")
                 continue
 
-            if task_id not in results:\
+            if task_id not in results:
                 # first iteration
                 results[task_id] = []
 
