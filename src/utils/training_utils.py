@@ -23,6 +23,11 @@ def run_epoch(model, train_dataset_loader, val_dataset_loader, criterion,
         output = model(input)
         output = output.to(nn_utils.get_device())
 
+        _, predicted = torch.max(output.data, 1)
+        correct_predictions = (predicted == label).sum().item()
+
+        accuracy = correct_predictions / label.size(0)
+
         loss = criterion(output, label.long())
         loss.backward()
 
@@ -34,7 +39,8 @@ def run_epoch(model, train_dataset_loader, val_dataset_loader, criterion,
         train_loss = loss.item()
         wandb.log({
             "learning-rate": float(curr_lr),
-            "training-loss": float(train_loss)
+            "training-loss": float(train_loss),
+            "accuracy": float(accuracy)
         })
         pbar.set_description(
             f"{model_id}/training-loss = {float(train_loss)}, model.n_iter={model.train_iter}, epoch={epoch + 1}")
@@ -56,13 +62,19 @@ def validate_model(model, dataset_loader, criterion, model_id, epoch):
             output = model(input)  # b x n_classes
             output = output.to(nn_utils.get_device())
 
+            _, predicted = torch.max(output.data, 1)
+            correct_predictions = (predicted == label).sum().item()
+
+            accuracy = correct_predictions / label.size(0)
+
             loss = criterion(output, label.long())
             curr_val_loss = loss.item()
             model.val_iter += 1
 
             # log validation loss
             wandb.log({
-                "validation-loss": float(curr_val_loss)
+                "validation-loss": float(curr_val_loss),
+                "validation-accuracy": float(accuracy)
             })
             pbar.set_description(
                 f"{model_id}/validation-loss = {float(curr_val_loss)}, model.n_iter={model.val_iter}, epoch={epoch + 1}")
