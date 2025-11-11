@@ -40,12 +40,12 @@ echo ""
 
 run_cmd "ls $data_dir"
 
-# run_cmd "tar -czf fine_tuning_1.tar.gz $data_dir"
+run_cmd "tar -czf fine_tuning_accuracy.tar.gz $data_dir"
 
 # run_cmd "ls mgm/mgm/data"
-# run_cmd "ls $data_dir"
+run_cmd "ls $data_dir"
 
-run_cmd "mv $data_dir /staging/aranastasi/HAVEN/outputs/LOOCV"
+run_cmd "mv fine_tuning_accuracy.tar.gz /staging/aranastasi/HAVEN/outputs"
 
 # delete output from the job working directory
 # run_cmd "rm -r $data_dir"
