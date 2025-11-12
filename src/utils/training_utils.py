@@ -51,6 +51,43 @@ def run_epoch(model, train_dataset_loader, val_dataset_loader, criterion,
     return model
 
 
+def run_epoch_without_validation(model, train_dataset_loader, criterion,
+              optimizer, lr_scheduler, model_id, epoch):
+    # training
+    model.train()
+    for _, record in enumerate(pbar := tqdm.tqdm(train_dataset_loader)):
+        input, label = record
+
+        optimizer.zero_grad()
+
+        output = model(input)
+        output = output.to(nn_utils.get_device())
+
+        _, predicted = torch.max(output.data, 1)
+        correct_predictions = (predicted == label).sum().item()
+
+        accuracy = correct_predictions / label.size(0)
+
+        loss = criterion(output, label.long())
+        loss.backward()
+
+        optimizer.step()
+        lr_scheduler.step()
+
+        model.train_iter += 1
+        curr_lr = lr_scheduler.get_last_lr()[0]
+        train_loss = loss.item()
+        wandb.log({
+            "learning-rate": float(curr_lr),
+            "training-loss": float(train_loss),
+            "accuracy": float(accuracy)
+        })
+        pbar.set_description(
+            f"{model_id}/training-loss = {float(train_loss)}, model.n_iter={model.train_iter}, epoch={epoch + 1}")
+        
+    return model
+
+
 def validate_model(model, dataset_loader, criterion, model_id, epoch):
     with torch.no_grad():
         model.eval()
