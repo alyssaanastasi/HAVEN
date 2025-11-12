@@ -39,6 +39,7 @@ def execute(config, rep=0):
     pre_train_settings = config["pre_train_settings"]
 
     fine_tune_settings = config["fine_tune_settings"]
+    validation_split = fine_tune_settings['validation_split']
     label_settings = fine_tune_settings["label_settings"]
     training_settings = fine_tune_settings["training_settings"]
 
@@ -68,7 +69,8 @@ def execute(config, rep=0):
         "output_prefix": output_prefix,
         "split_seed": split_seed,
         "rep" : rep,
-        "withheld_species" : withheld_species
+        "withheld_species" : withheld_species,
+        "validation_split": validation_split
     }
 
     # fine_tune_model store filepath
@@ -84,112 +86,121 @@ def execute(config, rep=0):
     
     unique_species = df["virus_species"].unique()
 
-    # Only do 1 iteration of fine-tuning for testing purposes, so got rid of for loop from standard pipeline
-    iter = 0
-    species = unique_species[0]
-    print(f"Iteration {iter}")
-    print(f'Current Fold Species: {species}')
+    for iter, species in enumerate(unique_species):
+        print(f"Iteration {iter}")
+        print(f'Current Fold Species: {species}')
 
-    # Transform labels 
-    df, index_label_map = utils.transform_labels(df, label_settings,
+
+        # Transform labels 
+        df, index_label_map = utils.transform_labels(df, label_settings,
                                                            classification_type=fine_tune_settings["classification_type"])
         
-    train_dataset_loader = None
-    val_dataset_loader = None
-    test_dataset_loader = None
+        train_dataset_loader = None
+        val_dataset_loader = None
+        test_dataset_loader = None
 
-    # Set up training set (all species except current species)
-    training_set = df[df['virus_species'] != species]
+        # Set up training set (all species except current species)
+        training_set = df[df['virus_species'] != species]
 
-    # split training set into ratio configured in config file with seed specified in split_seed for testing and validation
-    train_df, val_df = dataset_utils.split_dataset_stratified(training_set, split_seed,
-                                                                fine_tune_settings["train_proportion"], stratify_col=label_col)
+        # split training set into ratio configured in config file with seed specified in split_seed for testing and validation
+        if validation_split:
+            train_df, val_df = dataset_utils.split_dataset_stratified(training_set, split_seed,
+                                                                       fine_tune_settings["train_proportion"], stratify_col=label_col)
         
-    train_dataset_loader = dataset_utils.get_dataset_loader(train_df, sequence_settings, label_col)
-    val_dataset_loader = dataset_utils.get_dataset_loader(val_df, sequence_settings, label_col)
-
-    # Set up testing set (current species)
-    test_df = df[df['virus_species'] == species]
-    test_dataset_loader = dataset_utils.get_dataset_loader(test_df, sequence_settings, label_col)
-
-    fine_tune_model = None
-    for task in tasks:
-        task_id = task["id"] # unique identifier
-        task_name = task["name"]
-        mode = task["mode"]
-
-        if task["active"] is False:
-            print(f"Skipping {task_name} ...")
-            continue
-
-        # load pre-trained encoder model_params
-        pre_trained_encoder_model = TransformerEncoder.get_transformer_encoder(pre_train_encoder_settings, task["cls_token"])
-        pre_trained_model_path = pre_train_settings["model_path"]
-        if pre_trained_model_path:
-            pre_trained_encoder_model.load_state_dict(
-                torch.load(pre_trained_model_path, map_location=nn_utils.get_device()))
-
-        # HACK to load models from checkpoints. CAUTION: Use only under dire circumstances
-        # pre_trained_encoder_model = nn_utils.load_model_from_checkpoint(pre_trained_encoder_model,
-        #                                                                pre_train_settings["model_path"])
-
-        # set the pre_trained model_params within the task config
-        task["pre_trained_model"] = pre_trained_encoder_model
-
-        # add maximum sequence length of pretrained model_params as the segment size from the sequence_settings
-        # in pre_train_encoder_settings it has been incremented by 1 to account for CLS token
-        task["segment_len"] = sequence_settings["max_sequence_length"]
-
-        print(f"Task Name: {task_name}")
-
-        if task_name in mapper.model_map:
-            print(f"Executing {task_name} in {mode} mode.")
-            print(task)
-            fine_tune_model = mapper.model_map[task_name].get_model(model_params=task)
+            train_dataset_loader = dataset_utils.get_dataset_loader(train_df, sequence_settings, label_col)
+            val_dataset_loader = dataset_utils.get_dataset_loader(val_df, sequence_settings, label_col)
         else:
-            print(f"ERROR: Unknown model {task_name}.")
-            continue
+            train_df = training_set
+            train_dataset_loader = dataset_utils.get_dataset_loader(train_df, sequence_settings, label_col)
 
-        if task_id not in results:
-            # first iteration
-            results[task_id] = []
 
-        # Initialize Weights & Biases for each run
-        wandb_config["hidden_dim"] = task["hidden_dim"]
-        wandb_config["n_mlp_layers"] = task["n_mlp_layers"]
+        # Set up testing set (current species)
+        test_df = df[df['virus_species'] == species]
+        test_dataset_loader = dataset_utils.get_dataset_loader(test_df, sequence_settings, label_col)
 
-        wandb.init(project="haven",
-                    config=wandb_config,
-                    group=f"kuzmin_LOOCV_rep{rep}",
-                    job_type=task_id,
-                    name=f"iter_{iter}_{species}")
+        fine_tune_model = None
+        for task in tasks:
+            task_id = task["id"] # unique identifier
+            task_name = task["name"]
+            mode = task["mode"]
 
-        if mode == "train":
-            # retraining the model_params for the fine_tuning task
-            result_df, fine_tune_model = run_task(fine_tune_model, train_dataset_loader, val_dataset_loader, test_dataset_loader,
-                                                task["loss"], training_settings, task_id)
-        elif mode == "test":
-            # used for zero-shot evaluation
-            # load the pre-trained and fine_tuned model_params
-            fine_tune_model.load_state_dict(torch.load(task["fine_tuned_model_path"]))
-            result_df = training_utils.test_model(fine_tune_model, test_dataset_loader)
-        else:
-            print(f"ERROR: Unsupported mode '{mode}'. Supported values: 'train', 'test'.")
-            exit(1)
+            if task["active"] is False:
+                print(f"Skipping {task_name} ...")
+                continue
 
-        #  create the result dataframe and remap the class indices to original input labels
-        result_df.rename(columns=index_label_map, inplace=True)
-        result_df["y_true"] = result_df["y_true"].map(index_label_map)
-        result_df["itr"] = iter
-        results[task_id].append(result_df)
+            # load pre-trained encoder model_params
+            pre_trained_encoder_model = TransformerEncoder.get_transformer_encoder(pre_train_encoder_settings, task["cls_token"])
+            pre_trained_model_path = pre_train_settings["model_path"]
+            if pre_trained_model_path:
+                pre_trained_encoder_model.load_state_dict(
+                    torch.load(pre_trained_model_path, map_location=nn_utils.get_device()))
 
-        if fine_tune_settings["save_model"]:
-            # save the fine_tuned model_params
-            model_filepath = fine_tune_model_filepath.format(output_prefix=output_prefix, task_id=task_id, itr=iter)
-            torch.save(fine_tune_model.state_dict(), model_filepath)
-            print(f"Model output written to {model_filepath}")
+            # HACK to load models from checkpoints. CAUTION: Use only under dire circumstances
+            # pre_trained_encoder_model = nn_utils.load_model_from_checkpoint(pre_trained_encoder_model,
+            #                                                                pre_train_settings["model_path"])
 
-        wandb.finish()
+            # set the pre_trained model_params within the task config
+            task["pre_trained_model"] = pre_trained_encoder_model
+
+            # add maximum sequence length of pretrained model_params as the segment size from the sequence_settings
+            # in pre_train_encoder_settings it has been incremented by 1 to account for CLS token
+            task["segment_len"] = sequence_settings["max_sequence_length"]
+
+            print(f"Task Name: {task_name}")
+
+            if task_name in mapper.model_map:
+                print(f"Executing {task_name} in {mode} mode.")
+                print(task)
+                fine_tune_model = mapper.model_map[task_name].get_model(model_params=task)
+            else:
+                print(f"ERROR: Unknown model {task_name}.")
+                continue
+
+            if task_id not in results:
+                # first iteration
+                results[task_id] = []
+
+            # Initialize Weights & Biases for each run
+            wandb_config["hidden_dim"] = task["hidden_dim"]
+            wandb_config["n_mlp_layers"] = task["n_mlp_layers"]
+
+            wandb.init(project="haven",
+                       config=wandb_config,
+                       group=f"kuzmin_LOOCV_rep{rep}",
+                       job_type=task_id,
+                       name=f"iter_{iter}_{species}")
+
+            if mode == "train":
+                # retraining the model_params for the fine_tuning task
+                if validation_split:
+                    result_df, fine_tune_model = run_task(fine_tune_model, train_dataset_loader, val_dataset_loader, test_dataset_loader,
+                                                   task["loss"], training_settings, task_id)
+                else:
+                    result_df, fine_tune_model = run_task_without_validation(fine_tune_model, train_dataset_loader, test_dataset_loader,
+                                                   task["loss"], training_settings, task_id)
+            elif mode == "test":
+                # used for zero-shot evaluation
+                # load the pre-trained and fine_tuned model_params
+                fine_tune_model.load_state_dict(torch.load(task["fine_tuned_model_path"]))
+                result_df = training_utils.test_model(fine_tune_model, test_dataset_loader)
+            else:
+                print(f"ERROR: Unsupported mode '{mode}'. Supported values: 'train', 'test'.")
+                exit(1)
+
+            #  create the result dataframe and remap the class indices to original input labels
+            result_df.rename(columns=index_label_map, inplace=True)
+            result_df["y_true"] = result_df["y_true"].map(index_label_map)
+            result_df["itr"] = iter
+            result_df['virus_species'] = species
+            results[task_id].append(result_df)
+
+            if fine_tune_settings["save_model"]:
+                # save the fine_tuned model_params
+                model_filepath = fine_tune_model_filepath.format(output_prefix=output_prefix, task_id=task_id, itr=iter)
+                torch.save(fine_tune_model.state_dict(), model_filepath)
+                print(f"Model output written to {model_filepath}")
+
+            wandb.finish()
 
     # write the raw results in csv files
     output_results_dir = os.path.join(output_dir, results_dir, sub_dir)
@@ -261,3 +272,56 @@ def run_task(model, train_dataset_loader, val_dataset_loader, test_dataset_loade
     result_df = training_utils.test_model(best_performing_model, test_dataset_loader)
 
     return result_df, best_performing_model
+
+
+def run_task_without_validation(model, train_dataset_loader, test_dataset_loader, loss, training_settings, task_id):
+    class_weights = utils.get_class_weights(train_dataset_loader).to(nn_utils.get_device())
+    criterion = nn_utils.get_criterion(loss, class_weights)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-4)
+    n_epochs_freeze = training_settings["n_epochs_freeze"]
+    n_epochs_unfreeze = training_settings["n_epochs_unfreeze"]
+    lr_scheduler = OneCycleLR(
+        optimizer=optimizer,
+        max_lr=float(training_settings["max_lr"]),
+        epochs=n_epochs_freeze + n_epochs_unfreeze,
+        steps_per_epoch=len(train_dataset_loader),
+        pct_start=training_settings["pct_start"],
+        anneal_strategy='cos',
+        div_factor=training_settings["div_factor"],
+        final_div_factor=training_settings["final_div_factor"])
+    
+    model.train_iter = 0
+    # START: Model training with early stopping using validation
+    # freeze the pretrained model_params for the first n_epochs_freeze
+    # nn_utils.set_model_grad(model.module.pre_trained_model, grad_value=False)
+    if isinstance(model, torch.nn.DataParallel):
+        nn_utils.set_model_grad(model.module.pre_trained_model, grad_value=False)
+    else:
+        nn_utils.set_model_grad(model.pre_trained_model, grad_value=False)
+
+
+    # train for n_epochs_freeze
+    for e in range(n_epochs_freeze):
+        model = training_utils.run_epoch_without_validation(model, train_dataset_loader, criterion, optimizer,
+                                         lr_scheduler, task_id, e)
+
+    # unfreeze the pretrained model_params for the next n_epochs_unfreeze
+    # nn_utils.set_model_grad(model.module.pre_trained_model, grad_value=True)
+
+    if isinstance(model, torch.nn.DataParallel):
+        nn_utils.set_model_grad(model.module.pre_trained_model, grad_value=True)
+    else:
+        nn_utils.set_model_grad(model.pre_trained_model, grad_value=True)
+
+
+    for e in range(n_epochs_unfreeze):
+        model = training_utils.run_epoch_without_validation(model, train_dataset_loader, criterion, optimizer,
+                                         lr_scheduler, task_id, e)
+        # check if early stopping condition was satisfied and stop accordingly
+    
+
+    # choose the model_params with the lowest validation loss from the early stopper
+    # test the model_params
+    result_df = training_utils.test_model(model, test_dataset_loader)
+
+    return result_df, model

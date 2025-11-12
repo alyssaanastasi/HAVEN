@@ -39,6 +39,7 @@ def execute(config, rep=0):
     pre_train_settings = config["pre_train_settings"]
 
     fine_tune_settings = config["fine_tune_settings"]
+    validation_split = fine_tune_settings['validation_split']
     label_settings = fine_tune_settings["label_settings"]
     training_settings = fine_tune_settings["training_settings"]
 
@@ -68,7 +69,8 @@ def execute(config, rep=0):
         "output_prefix": output_prefix,
         "split_seed": split_seed,
         "rep" : rep,
-        "withheld_species" : withheld_species
+        "withheld_species" : withheld_species,
+        "validation_split": validation_split
     }
 
     # fine_tune_model store filepath
@@ -101,11 +103,16 @@ def execute(config, rep=0):
         training_set = df[df['virus_species'] != species]
 
         # split training set into ratio configured in config file with seed specified in split_seed for testing and validation
-        train_df, val_df = dataset_utils.split_dataset_stratified(training_set, split_seed,
+        if validation_split:
+            train_df, val_df = dataset_utils.split_dataset_stratified(training_set, split_seed,
                                                                        fine_tune_settings["train_proportion"], stratify_col=label_col)
         
-        train_dataset_loader = dataset_utils.get_dataset_loader(train_df, sequence_settings, label_col)
-        val_dataset_loader = dataset_utils.get_dataset_loader(val_df, sequence_settings, label_col)
+            train_dataset_loader = dataset_utils.get_dataset_loader(train_df, sequence_settings, label_col)
+            val_dataset_loader = dataset_utils.get_dataset_loader(val_df, sequence_settings, label_col)
+        else:
+            train_df = training_set
+            train_dataset_loader = dataset_utils.get_dataset_loader(train_df, sequence_settings, label_col)
+
 
         # Set up testing set (current species)
         test_df = df[df['virus_species'] == species]
@@ -165,7 +172,11 @@ def execute(config, rep=0):
 
             if mode == "train":
                 # retraining the model_params for the fine_tuning task
-                result_df, fine_tune_model = run_task(fine_tune_model, train_dataset_loader, val_dataset_loader, test_dataset_loader,
+                if validation_split:
+                    result_df, fine_tune_model = run_task(fine_tune_model, train_dataset_loader, val_dataset_loader, test_dataset_loader,
+                                                   task["loss"], training_settings, task_id)
+                else:
+                    result_df, fine_tune_model = run_task_without_validation(fine_tune_model, train_dataset_loader, test_dataset_loader,
                                                    task["loss"], training_settings, task_id)
             elif mode == "test":
                 # used for zero-shot evaluation
@@ -261,3 +272,56 @@ def run_task(model, train_dataset_loader, val_dataset_loader, test_dataset_loade
     result_df = training_utils.test_model(best_performing_model, test_dataset_loader)
 
     return result_df, best_performing_model
+
+
+def run_task_without_validation(model, train_dataset_loader, test_dataset_loader, loss, training_settings, task_id):
+    class_weights = utils.get_class_weights(train_dataset_loader).to(nn_utils.get_device())
+    criterion = nn_utils.get_criterion(loss, class_weights)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-4)
+    n_epochs_freeze = training_settings["n_epochs_freeze"]
+    n_epochs_unfreeze = training_settings["n_epochs_unfreeze"]
+    lr_scheduler = OneCycleLR(
+        optimizer=optimizer,
+        max_lr=float(training_settings["max_lr"]),
+        epochs=n_epochs_freeze + n_epochs_unfreeze,
+        steps_per_epoch=len(train_dataset_loader),
+        pct_start=training_settings["pct_start"],
+        anneal_strategy='cos',
+        div_factor=training_settings["div_factor"],
+        final_div_factor=training_settings["final_div_factor"])
+    
+    model.train_iter = 0
+    # START: Model training with early stopping using validation
+    # freeze the pretrained model_params for the first n_epochs_freeze
+    # nn_utils.set_model_grad(model.module.pre_trained_model, grad_value=False)
+    if isinstance(model, torch.nn.DataParallel):
+        nn_utils.set_model_grad(model.module.pre_trained_model, grad_value=False)
+    else:
+        nn_utils.set_model_grad(model.pre_trained_model, grad_value=False)
+
+
+    # train for n_epochs_freeze
+    for e in range(n_epochs_freeze):
+        model = training_utils.run_epoch_without_validation(model, train_dataset_loader, criterion, optimizer,
+                                         lr_scheduler, task_id, e)
+
+    # unfreeze the pretrained model_params for the next n_epochs_unfreeze
+    # nn_utils.set_model_grad(model.module.pre_trained_model, grad_value=True)
+
+    if isinstance(model, torch.nn.DataParallel):
+        nn_utils.set_model_grad(model.module.pre_trained_model, grad_value=True)
+    else:
+        nn_utils.set_model_grad(model.pre_trained_model, grad_value=True)
+
+
+    for e in range(n_epochs_unfreeze):
+        model = training_utils.run_epoch_without_validation(model, train_dataset_loader, criterion, optimizer,
+                                         lr_scheduler, task_id, e)
+        # check if early stopping condition was satisfied and stop accordingly
+    
+
+    # choose the model_params with the lowest validation loss from the early stopper
+    # test the model_params
+    result_df = training_utils.test_model(model, test_dataset_loader)
+
+    return result_df, model
