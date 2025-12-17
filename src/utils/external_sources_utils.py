@@ -221,6 +221,7 @@ def query_embl(embl_ref_ids, temp_dir):
     # 1. Write the REST API's response to a temporary file to be processed using BioPython
     # 2. Capture the host
     # 3. Delete the temp file at the end of processing
+    os.makedirs(temp_dir, exist_ok=True)
 
     temp_output_file_path = os.path.join(temp_dir, "temp_" + str(random.randint(0, 1e9)) + ".txt")
     with open(temp_output_file_path, "w") as f:
