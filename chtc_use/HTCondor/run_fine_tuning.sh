@@ -30,7 +30,7 @@ echo "2. Fine tune base HAVEN model"
 echo "--------------------------------------------"
 echo ""
 
-run_cmd "python HAVEN/src/run.py -c HAVEN/input/config-files/virus_host_prediction/kuzmin/kuzmin-fine-tuning.yaml"
+run_cmd "python HAVEN/src/run.py -c HAVEN/input/config-files/virus_host_prediction/influenza-fine-tuning.yaml"
 
 # Copy output files to staging
 echo ""
@@ -45,7 +45,7 @@ run_cmd "tar -czf fine_tuning_accuracy.tar.gz $data_dir"
 # run_cmd "ls mgm/mgm/data"
 run_cmd "ls $data_dir"
 
-run_cmd "mv fine_tuning_accuracy.tar.gz /staging/aranastasi/HAVEN/outputs"
+run_cmd "mv fine_tuning_accuracy.tar.gz /staging/aranastasi/HAVEN/outputs/influenza/"
 
 # delete output from the job working directory
 # run_cmd "rm -r $data_dir"
