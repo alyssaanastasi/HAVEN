@@ -31,4 +31,4 @@ transfer_input_files = /home/aranastasi/spillover/HAVEN
 requirements = (HasCHTCStaging == true)
 
 # Run once
-queue
+queue 4
